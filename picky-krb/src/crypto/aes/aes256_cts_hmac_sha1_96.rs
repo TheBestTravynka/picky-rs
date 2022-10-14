@@ -1,5 +1,6 @@
-use rand::rngs::OsRng;
 use rand::Rng;
+use rand::rngs::SmallRng;
+use rand::SeedableRng;
 
 use crate::crypto::{Cipher, CipherSuite, KerberosCryptoError, KerberosCryptoResult};
 
@@ -31,7 +32,10 @@ impl Cipher for Aes256CtsHmacSha196 {
             key_usage,
             payload,
             &AesSize::Aes256,
-            OsRng::default().gen::<[u8; AES_BLOCK_SIZE]>(),
+            #[cfg(target_family = "wasm")]
+            SmallRng::from_seed([0; 16]).gen::<[u8; AES_BLOCK_SIZE]>(),
+            #[cfg(not(target_family = "wasm"))]
+            SmallRng::from_seed([0; 32]).gen::<[u8; AES_BLOCK_SIZE]>(),
         )
     }
 
